@@ -1,0 +1,1166 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PhoneFix Pro - ระบบติดตามสถานะร้านซ่อมมือถือ (Flutter Web Client)</title>
+    <!-- Google Fonts & Material Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+    <style>
+        :root {
+            /* Standard Flutter Material Colors */
+            --primary: #1a237e; /* Colors.indigo[900] */
+            --primary-variant: #283593;
+            --secondary: #0288d1; /* Colors.lightBlue[700] */
+            --background: #f8fafc;
+            --surface: #ffffff;
+            --error: #d32f2f; /* Colors.red[700] */
+            --on-primary: #ffffff;
+            --on-surface: #1e293b;
+            --outline: #e2e8f0;
+            --status-received: #1976d2; /* Colors.blue[700] */
+            --status-repairing: #f57c00; /* Colors.orange[700] */
+            --status-completed: #388e3c; /* Colors.green[700] */
+            --status-cancelled: #d32f2f; /* Colors.red[700] */
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Prompt', 'Roboto', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--background);
+            color: var(--on-surface);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Material AppBar */
+        .app-bar {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-variant) 100%);
+            color: var(--on-primary);
+            padding: 12px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 12px rgba(26, 35, 126, 0.25);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .brand-container {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+        }
+
+        .brand-icon {
+            background: rgba(255, 255, 255, 0.15);
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+        }
+
+        .brand-title {
+            font-size: 18px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+
+        .brand-subtitle {
+            font-size: 11px;
+            opacity: 0.8;
+            font-weight: 400;
+        }
+
+        /* Navigation Bar (Tabs) */
+        .tab-bar {
+            background: var(--surface);
+            border-bottom: 1px solid var(--outline);
+            display: flex;
+            overflow-x: auto;
+            padding: 0 16px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+        }
+
+        .tab-button {
+            padding: 14px 20px;
+            background: none;
+            border: none;
+            border-bottom: 3px solid transparent;
+            font-size: 13px;
+            font-weight: 600;
+            color: #64748b;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .tab-button.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+        }
+
+        .tab-button:hover {
+            color: var(--secondary);
+        }
+
+        /* Main Container */
+        .content-container {
+            max-width: 900px;
+            margin: 24px auto;
+            padding: 0 16px;
+            width: 100%;
+            flex-grow: 1;
+        }
+
+        /* Material Card */
+        .card {
+            background: var(--surface);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+            border: 1px solid var(--outline);
+            margin-bottom: 24px;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #f1f5f9;
+            padding-bottom: 14px;
+        }
+
+        .card-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Material Input */
+        .input-group {
+            margin-bottom: 16px;
+        }
+
+        .input-label {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            color: #475569;
+            margin-bottom: 6px;
+        }
+
+        .input-control {
+            width: 100%;
+            padding: 12px 16px;
+            border-radius: 10px;
+            border: 1.5px solid #cbd5e1;
+            font-size: 13px;
+            outline: none;
+            transition: all 0.2s;
+            background: #ffffff;
+        }
+
+        .input-control:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(26, 35, 126, 0.12);
+        }
+
+        /* Material Buttons */
+        .btn {
+            padding: 11px 20px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+            box-shadow: 0 4px 10px rgba(26, 35, 126, 0.25);
+        }
+
+        .btn-primary:hover {
+            background-color: var(--primary-variant);
+            box-shadow: 0 6px 14px rgba(26, 35, 126, 0.35);
+        }
+
+        .btn-success {
+            background-color: var(--status-completed);
+            color: white;
+        }
+
+        .btn-success:hover {
+            background-color: #2e7d32;
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1px solid #cbd5e1;
+            color: #475569;
+        }
+
+        .btn-outline:hover {
+            background: #f1f5f9;
+        }
+
+        /* Status Chips (Material colors only) */
+        .chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 12px;
+            border-radius: 9999px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .chip-received { background: #e3f2fd; color: var(--status-received); border: 1px solid #bbdefb; }
+        .chip-repairing { background: #fff3e0; color: var(--status-repairing); border: 1px solid #ffe0b2; }
+        .chip-completed { background: #e8f5e9; color: var(--status-completed); border: 1px solid #c8e6c9; }
+        .chip-cancelled { background: #ffebee; color: var(--status-cancelled); border: 1px solid #ffcdd2; }
+
+        /* Timeline */
+        .timeline {
+            position: relative;
+            border-left: 2px solid #cbd5e1;
+            margin-left: 12px;
+            padding-left: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .timeline-item {
+            position: relative;
+        }
+
+        .timeline-dot {
+            position: absolute;
+            left: -27px;
+            top: 4px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--primary);
+            border: 2px solid white;
+            box-shadow: 0 0 0 2px var(--primary);
+        }
+
+        .timeline-card {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 12px 16px;
+        }
+
+        /* Floating action helper */
+        .quick-accounts {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .quick-badge {
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 11px;
+            cursor: pointer;
+            border: 1px solid #e2e8f0;
+            background: #f1f5f9;
+            font-weight: 500;
+        }
+
+        .quick-badge:hover {
+            background: #e2e8f0;
+        }
+
+        /* Toast / Snackbar */
+        .snackbar {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #1e293b;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 30px;
+            font-size: 13px;
+            display: none;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+            z-index: 9999;
+        }
+
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+
+    <!-- Material AppBar -->
+    <header class="app-bar">
+        <div class="brand-container" onclick="switchTab('track')">
+            <div class="brand-icon">
+                <span class="material-icons">phonelink_setup</span>
+            </div>
+            <div>
+                <div class="brand-title">PhoneFix Pro (Flutter Web)</div>
+                <div class="brand-subtitle">ระบบติดตามสถานะร้านซ่อมมือถือ</div>
+            </div>
+        </div>
+
+        <div id="authStatusContainer" style="display: flex; align-items: center; gap: 10px;">
+            <!-- Rendered by JS -->
+        </div>
+    </header>
+
+    <!-- Navigation Tab Bar -->
+    <nav class="tab-bar">
+        <button class="tab-button active" id="tab-btn-track" onclick="switchTab('track')">
+            <span class="material-icons" style="font-size: 18px;">search</span>
+            <span>ค้นหา & ติดตามสถานะ</span>
+        </button>
+        <button class="tab-button" id="tab-btn-submit" onclick="switchTab('submit')">
+            <span class="material-icons" style="font-size: 18px;">add_circle_outline</span>
+            <span>ยื่นแจ้งซ่อม</span>
+        </button>
+        <button class="tab-button" id="tab-btn-mytickets" onclick="switchTab('mytickets')">
+            <span class="material-icons" style="font-size: 18px;">receipt_long</span>
+            <span>งานซ่อมของฉัน</span>
+        </button>
+        <button class="tab-button" id="tab-btn-admin" onclick="switchTab('admin')">
+            <span class="material-icons" style="font-size: 18px;">dashboard</span>
+            <span>แผงควบคุมช่าง (Admin)</span>
+        </button>
+        <button class="tab-button" id="tab-btn-auth" onclick="switchTab('auth')">
+            <span class="material-icons" style="font-size: 18px;">account_circle</span>
+            <span id="tab-auth-label">เข้าสู่ระบบ / สมาชิก</span>
+        </button>
+    </nav>
+
+    <!-- Main Views Container -->
+    <main class="content-container">
+
+        <!-- ================= VIEW 1: TRACKING ================= -->
+        <section id="view-track" class="card">
+            <div class="card-header">
+                <h2 class="card-title">
+                    <span class="material-icons">travel_explore</span>
+                    <span>ติดตามความคืบหน้างานซ่อม (Real-Time Tracking)</span>
+                </h2>
+            </div>
+
+            <div style="display: flex; gap: 8px; margin-bottom: 20px;">
+                <input type="text" id="trackInput" class="input-control" placeholder="กรอกรหัสติดตาม (เช่น REP-2026001) หรือเบอร์โทรศัพท์" value="REP-2026001">
+                <button class="btn btn-primary" onclick="searchTicket()">
+                    <span class="material-icons">search</span>
+                    <span>ค้นหา</span>
+                </button>
+            </div>
+
+            <div style="font-size: 12px; color: #64748b; margin-bottom: 16px;">
+                💡 ตัวอย่างรหัสทดสอบ: 
+                <span style="color: var(--primary); cursor: pointer; text-decoration: underline; font-family: monospace; font-weight: bold;" onclick="setTrack('REP-2026001')">REP-2026001</span> (กำลังซ่อม), 
+                <span style="color: var(--primary); cursor: pointer; text-decoration: underline; font-family: monospace; font-weight: bold;" onclick="setTrack('REP-2026002')">REP-2026002</span> (ซ่อมเสร็จแล้ว)
+            </div>
+
+            <!-- Tracking Result -->
+            <div id="trackResultBox" class="hidden">
+                <!-- Header Status Card -->
+                <div style="background: #f1f5f9; border-radius: 12px; padding: 18px; margin-bottom: 20px; border-left: 5px solid var(--primary);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+                        <div>
+                            <div style="font-size: 11px; color: #64748b; font-weight: bold; text-transform: uppercase;">รหัสงานซ่อม</div>
+                            <div id="resTrackingCode" style="font-size: 20px; font-weight: 700; font-family: monospace; color: var(--primary);">REP-2026001</div>
+                        </div>
+                        <div id="resStatusChip">
+                            <!-- Chip -->
+                        </div>
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; margin-bottom: 24px;">
+                    <div style="background: white; border: 1px solid var(--outline); padding: 14px; border-radius: 10px;">
+                        <span style="font-size: 11px; color: #64748b; display: block;">อุปกรณ์ / รุ่น:</span>
+                        <strong id="resDeviceModel" style="font-size: 14px; color: #0f172a;">-</strong>
+                    </div>
+                    <div style="background: white; border: 1px solid var(--outline); padding: 14px; border-radius: 10px;">
+                        <span style="font-size: 11px; color: #64748b; display: block;">ประเภทการซ่อม:</span>
+                        <strong id="resRepairType" style="font-size: 14px; color: var(--secondary);">-</strong>
+                    </div>
+                    <div style="background: #f0fdf4; border: 1px solid #bbf7d0; padding: 14px; border-radius: 10px;">
+                        <span style="font-size: 11px; color: #166534; display: block;">ค่าบริการ / ค่าอะไหล่รวม:</span>
+                        <strong id="resTotalCost" style="font-size: 18px; color: #15803d;">฿0.00</strong>
+                    </div>
+                </div>
+
+                <div style="background: #fffbeb; border: 1px solid #fef3c7; border-radius: 10px; padding: 14px; margin-bottom: 24px;">
+                    <strong style="font-size: 12px; color: #92400e; display: block; margin-bottom: 4px;">อาการเสียที่แจ้งไว้:</strong>
+                    <div id="resIssueDesc" style="font-size: 13px; color: #451a03;">-</div>
+                </div>
+
+                <!-- Timeline Section -->
+                <div>
+                    <h3 style="font-size: 14px; font-weight: 700; color: #1e293b; margin-bottom: 14px; display: flex; align-items: center; gap: 6px;">
+                        <span class="material-icons" style="font-size: 18px;">history</span>
+                        <span>ประวัติการดำเนินงานของช่าง (Status Logs)</span>
+                    </h3>
+                    <div class="timeline" id="resTimelineLogs">
+                        <!-- Rendered by JS -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= VIEW 2: SUBMIT TICKET ================= -->
+        <section id="view-submit" class="card hidden">
+            <div class="card-header">
+                <h2 class="card-title">
+                    <span class="material-icons">phonelink_ring</span>
+                    <span>ยื่นคำขอส่งซ่อมมือถือ (Submit Repair Request)</span>
+                </h2>
+            </div>
+
+            <form id="submitRepairForm" onsubmit="handleCreateTicket(event)">
+                <div class="input-group">
+                    <label class="input-label">ประเภทงานซ่อม / บริการ *</label>
+                    <select id="submitRepairTypeId" class="input-control" required>
+                        <option value="">กำลังโหลดประเภทงานซ่อม...</option>
+                    </select>
+                </div>
+
+                <div class="input-group">
+                    <label class="input-label">ยี่ห้อและรุ่นของอุปกรณ์ *</label>
+                    <input type="text" id="submitDeviceModel" class="input-control" placeholder="เช่น iPhone 14 Pro หรือ Samsung Galaxy S24" required>
+                </div>
+
+                <div class="input-group">
+                    <label class="input-label">รายละเอียดอาการเสีย *</label>
+                    <textarea id="submitIssueDesc" class="input-control" rows="4" placeholder="กรุณาระบุอาการ เช่น จอสัมผัสเพี้ยน แบตเตอรี่หมดเร็ว ชาร์จไฟไม่เข้า หรือเปิดไม่ติด..." required></textarea>
+                </div>
+
+                <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
+                    <button type="submit" class="btn btn-primary">
+                        <span class="material-icons">send</span>
+                        <span>ส่งคำขอแจ้งซ่อม</span>
+                    </button>
+                </div>
+            </form>
+        </section>
+
+        <!-- ================= VIEW 3: MY TICKETS ================= -->
+        <section id="view-mytickets" class="card hidden">
+            <div class="card-header">
+                <h2 class="card-title">
+                    <span class="material-icons">assignment</span>
+                    <span>รายการงานซ่อมของฉัน (My Tickets)</span>
+                </h2>
+                <button class="btn btn-outline" style="padding: 6px 12px; font-size: 12px;" onclick="loadMyTickets()">
+                    <span class="material-icons" style="font-size: 16px;">refresh</span>
+                    <span>รีเฟรช</span>
+                </button>
+            </div>
+
+            <div id="myTicketsList">
+                <p style="text-align: center; color: #64748b; font-size: 13px;">กรุณาเข้าสู่ระบบเพื่อดูรายการงานซ่อมของคุณ</p>
+            </div>
+        </section>
+
+        <!-- ================= VIEW 4: ADMIN DASHBOARD ================= -->
+        <section id="view-admin" class="card hidden">
+            <div class="card-header">
+                <h2 class="card-title">
+                    <span class="material-icons">engineering</span>
+                    <span>แผงควบคุมช่างซ่อมมือถือ (Admin Panel)</span>
+                </h2>
+                <button class="btn btn-outline" style="padding: 6px 12px; font-size: 12px;" onclick="loadAdminTickets()">
+                    <span class="material-icons" style="font-size: 16px;">refresh</span>
+                    <span>รีเฟรชข้อมูล</span>
+                </button>
+            </div>
+
+            <div id="adminRestrictedWarning" style="background: #fffbeb; border: 1px solid #fde68a; border-radius: 10px; padding: 14px; margin-bottom: 20px; font-size: 12px; color: #92400e;">
+                ⚠️ เมนูนี้สำหรับผู้ใช้งานสิทธิ์ <strong>Admin (ช่างซ่อม)</strong> เท่านั้น กรุณาเข้าสู่ระบบด้วยบัญชีช่างเพื่ออัปเดตงานซ่อม
+            </div>
+
+            <div id="adminDashboardContent" class="hidden">
+                <!-- Filter Status Chips -->
+                <div style="display: flex; gap: 8px; margin-bottom: 16px; overflow-x: auto; padding-bottom: 4px;">
+                    <button class="quick-badge" onclick="filterAdminTickets('')">ทั้งหมด</button>
+                    <button class="quick-badge" onclick="filterAdminTickets('received')">📥 รับเครื่อง</button>
+                    <button class="quick-badge" onclick="filterAdminTickets('repairing')">🔧 กำลังซ่อม</button>
+                    <button class="quick-badge" onclick="filterAdminTickets('completed')">✅ เสร็จสิ้น</button>
+                    <button class="quick-badge" onclick="filterAdminTickets('cancelled')">❌ ยกเลิก</button>
+                </div>
+
+                <div id="adminTicketsList">
+                    <!-- Loaded via JS -->
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= VIEW 5: AUTH & PROFILE ================= -->
+        <section id="view-auth" class="card hidden">
+            <div class="card-header">
+                <h2 class="card-title">
+                    <span class="material-icons">vpn_key</span>
+                    <span id="authHeaderTitle">เข้าสู่ระบบ / จัดการบัญชี</span>
+                </h2>
+            </div>
+
+            <!-- Quick accounts demo -->
+            <div class="quick-accounts">
+                <div class="quick-badge" onclick="fillAuth('admin@repairsystem.com', 'admin1234')">
+                    👑 เข้าสู่ระบบเป็น Admin (ช่างซ่อม)
+                </div>
+                <div class="quick-badge" onclick="fillAuth('user@repairsystem.com', 'user1234')">
+                    👤 เข้าสู่ระบบเป็น User (ลูกค้า)
+                </div>
+            </div>
+
+            <!-- Login / Register Switcher -->
+            <div id="authFormsContainer">
+                <div style="display: flex; border-bottom: 1px solid #e2e8f0; margin-bottom: 20px;">
+                    <button id="authSubTabLogin" class="tab-button active" onclick="switchAuthSubTab('login')" style="padding: 8px 16px;">เข้าสู่ระบบ (Login)</button>
+                    <button id="authSubTabRegister" class="tab-button" onclick="switchAuthSubTab('register')" style="padding: 8px 16px;">สมัครสมาชิก (Register)</button>
+                </div>
+
+                <!-- Login Form -->
+                <form id="loginForm" onsubmit="handleLogin(event)">
+                    <div class="input-group">
+                        <label class="input-label">อีเมลผู้ใช้งาน</label>
+                        <input type="email" id="loginEmail" class="input-control" placeholder="เช่น admin@repairsystem.com" required>
+                    </div>
+                    <div class="input-group">
+                        <label class="input-label">รหัสผ่าน</label>
+                        <input type="password" id="loginPassword" class="input-control" placeholder="••••••••" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="width: 100%;">
+                        <span class="material-icons">login</span>
+                        <span>เข้าสู่ระบบ</span>
+                    </button>
+                </form>
+
+                <!-- Register Form -->
+                <form id="registerForm" class="hidden" onsubmit="handleRegister(event)">
+                    <div class="input-group">
+                        <label class="input-label">ชื่อ - นามสกุล *</label>
+                        <input type="text" id="regName" class="input-control" placeholder="เช่น สมเกียรติ สว่างดี" required>
+                    </div>
+                    <div class="input-group">
+                        <label class="input-label">เบอร์โทรศัพท์ *</label>
+                        <input type="tel" id="regPhone" class="input-control" placeholder="เช่น 0891234567" required>
+                    </div>
+                    <div class="input-group">
+                        <label class="input-label">อีเมล *</label>
+                        <input type="email" id="regEmail" class="input-control" placeholder="เช่น client@example.com" required>
+                    </div>
+                    <div class="input-group">
+                        <label class="input-label">รหัสผ่าน (อย่างน้อย 6 ตัวอักษร) *</label>
+                        <input type="password" id="regPassword" class="input-control" placeholder="••••••••" required>
+                    </div>
+                    <button type="submit" class="btn btn-success" style="width: 100%;">
+                        <span class="material-icons">person_add</span>
+                        <span>ลงทะเบียนสมาชิกใหม่</span>
+                    </button>
+                </form>
+            </div>
+
+            <!-- Profile View (if logged in) -->
+            <div id="profileContainer" class="hidden">
+                <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 20px;">
+                    <div style="width: 60px; height: 60px; border-radius: 50%; background: var(--primary); color: white; display: flex; align-items: center; justify-content: center; font-size: 28px;">
+                        <span class="material-icons" style="font-size: 32px;">person</span>
+                    </div>
+                    <div>
+                        <h3 id="profName" style="font-size: 18px; font-weight: 700; color: #1e293b;">-</h3>
+                        <p id="profRoleBadge" class="chip chip-received" style="margin-top: 4px;">Role: -</p>
+                    </div>
+                </div>
+
+                <div style="background: #f8fafc; border-radius: 12px; padding: 16px; margin-bottom: 20px; font-size: 13px;">
+                    <div style="margin-bottom: 8px;">📧 <strong>อีเมล:</strong> <span id="profEmail">-</span></div>
+                    <div>📱 <strong>เบอร์โทรศัพท์:</strong> <span id="profPhone">-</span></div>
+                </div>
+
+                <button class="btn btn-outline" style="color: var(--error); border-color: var(--error);" onclick="handleLogout()">
+                    <span class="material-icons">logout</span>
+                    <span>ออกจากระบบ</span>
+                </button>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Modal: Admin Status Update -->
+    <div id="updateStatusModal" style="position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 2000; padding: 16px;">
+        <div style="background: white; border-radius: 16px; max-width: 500px; width: 100%; padding: 24px; box-shadow: 0 10px 25px rgba(0,0,0,0.2);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                <h3 style="font-size: 16px; font-weight: 700; color: var(--primary);">🛠️ อัปเดตสถานะงานซ่อม</h3>
+                <span class="material-icons" style="cursor: pointer; color: #94a3b8;" onclick="closeModal()">close</span>
+            </div>
+
+            <form id="updateStatusForm" onsubmit="submitStatusUpdate(event)">
+                <input type="hidden" id="modalTicketId">
+                <div class="input-group">
+                    <label class="input-label">สถานะงานซ่อม *</label>
+                    <select id="modalStatus" class="input-control" required>
+                        <option value="received">📥 1. รับเครื่องเข้าซ่อม (Received)</option>
+                        <option value="repairing">🔧 2. กำลังดำเนินการซ่อม (Repairing)</option>
+                        <option value="completed">✅ 3. ซ่อมเสร็จสิ้น / พร้อมส่งมอบ (Completed)</option>
+                        <option value="cancelled">❌ 4. ยกเลิกการซ่อม (Cancelled)</option>
+                    </select>
+                </div>
+
+                <div class="input-group">
+                    <label class="input-label">ค่าบริการหรือค่าอะไหล่จริง (บาท)</label>
+                    <input type="number" step="0.01" id="modalCost" class="input-control" placeholder="1500.00">
+                </div>
+
+                <div class="input-group">
+                    <label class="input-label">บันทึกรายละเอียดจากช่าง *</label>
+                    <textarea id="modalNote" class="input-control" rows="3" placeholder="ระบุการปฏิบัติงาน..." required></textarea>
+                </div>
+
+                <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
+                    <button type="button" class="btn btn-outline" onclick="closeModal()">ยกเลิก</button>
+                    <button type="submit" class="btn btn-primary">
+                        <span>บันทึกความคืบหน้า</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Toast / Snackbar -->
+    <div id="snackbar" class="snackbar">ข้อความแจ้งเตือน</div>
+
+    <script>
+        // API Base URL (Relative or localhost:8080)
+        const API_BASE = window.location.origin.includes('localhost') || window.location.origin.includes('127.0.0.1')
+            ? '/api' 
+            : '/api';
+
+        let currentUser = null;
+        let authToken = localStorage.getItem('phonefix_token') || '';
+        let allAdminTickets = [];
+
+        // App Initializer
+        window.addEventListener('DOMContentLoaded', async () => {
+            await checkAuth();
+            loadRepairTypes();
+            // Automatically run initial track
+            searchTicket();
+        });
+
+        // Tab Switcher
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('section').forEach(sec => sec.classList.add('hidden'));
+
+            const targetBtn = document.getElementById('tab-btn-' + tabName);
+            const targetView = document.getElementById('view-' + tabName);
+            if (targetBtn) targetBtn.classList.add('active');
+            if (targetView) targetView.classList.remove('hidden');
+
+            if (tabName === 'mytickets') loadMyTickets();
+            if (tabName === 'admin') loadAdminTickets();
+        }
+
+        function switchAuthSubTab(subTab) {
+            document.getElementById('authSubTabLogin').classList.remove('active');
+            document.getElementById('authSubTabRegister').classList.remove('active');
+            document.getElementById('loginForm').classList.add('hidden');
+            document.getElementById('registerForm').classList.add('hidden');
+
+            if (subTab === 'login') {
+                document.getElementById('authSubTabLogin').classList.add('active');
+                document.getElementById('loginForm').classList.remove('hidden');
+            } else {
+                document.getElementById('authSubTabRegister').classList.add('active');
+                document.getElementById('registerForm').classList.remove('hidden');
+            }
+        }
+
+        function showToast(msg) {
+            const el = document.getElementById('snackbar');
+            el.innerText = msg;
+            el.style.display = 'block';
+            setTimeout(() => { el.style.display = 'none'; }, 3500);
+        }
+
+        // Authentication Handler
+        async function checkAuth() {
+            if (!authToken) {
+                renderGuestNav();
+                return;
+            }
+            try {
+                const res = await fetch(API_BASE + '/me', {
+                    headers: { 'Authorization': 'Bearer ' + authToken }
+                });
+                const data = await res.json();
+                if (data.success && data.user) {
+                    currentUser = data.user;
+                    renderAuthNav();
+                } else {
+                    handleLogoutSilent();
+                }
+            } catch (e) {
+                renderGuestNav();
+            }
+        }
+
+        function renderGuestNav() {
+            currentUser = null;
+            document.getElementById('authStatusContainer').innerHTML = `
+                <button class="btn" style="background: rgba(255,255,255,0.15); color: white; padding: 6px 14px; font-size: 12px;" onclick="switchTab('auth')">
+                    <span class="material-icons" style="font-size: 16px;">login</span>
+                    <span>เข้าสู่ระบบ</span>
+                </button>
+            `;
+            document.getElementById('tab-auth-label').innerText = 'เข้าสู่ระบบ / สมาชิก';
+            document.getElementById('authFormsContainer').classList.remove('hidden');
+            document.getElementById('profileContainer').classList.add('hidden');
+            document.getElementById('adminRestrictedWarning').classList.remove('hidden');
+            document.getElementById('adminDashboardContent').classList.add('hidden');
+        }
+
+        function renderAuthNav() {
+            const roleBadge = currentUser.role === 'admin' ? 'ช่าง (Admin)' : 'ลูกค้า';
+            document.getElementById('authStatusContainer').innerHTML = `
+                <div style="font-size: 12px; display: flex; align-items: center; gap: 8px;">
+                    <span style="background: #e0e7ff; color: #1e1b4b; padding: 4px 10px; border-radius: 999px; font-weight: bold;">
+                        ${roleBadge}: ${currentUser.name}
+                    </span>
+                    <button class="btn" style="background: rgba(239, 68, 68, 0.2); color: #fca5a5; padding: 6px 10px; font-size: 11px;" onclick="handleLogout()">
+                        ออกจากระบบ
+                    </button>
+                </div>
+            `;
+            document.getElementById('tab-auth-label').innerText = 'โปรไฟล์ (' + currentUser.name.split(' ')[0] + ')';
+            document.getElementById('authFormsContainer').classList.add('hidden');
+            document.getElementById('profileContainer').classList.remove('hidden');
+
+            document.getElementById('profName').innerText = currentUser.name;
+            document.getElementById('profRoleBadge').innerText = 'Role: ' + currentUser.role;
+            document.getElementById('profEmail').innerText = currentUser.email;
+            document.getElementById('profPhone').innerText = currentUser.phone;
+
+            if (currentUser.role === 'admin') {
+                document.getElementById('adminRestrictedWarning').classList.add('hidden');
+                document.getElementById('adminDashboardContent').classList.remove('hidden');
+            } else {
+                document.getElementById('adminRestrictedWarning').classList.remove('hidden');
+                document.getElementById('adminDashboardContent').classList.add('hidden');
+            }
+        }
+
+        function fillAuth(email, pass) {
+            switchAuthSubTab('login');
+            document.getElementById('loginEmail').value = email;
+            document.getElementById('loginPassword').value = pass;
+        }
+
+        async function handleLogin(e) {
+            e.preventDefault();
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+
+            try {
+                const res = await fetch(API_BASE + '/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    authToken = data.token;
+                    currentUser = data.user;
+                    localStorage.setItem('phonefix_token', authToken);
+                    renderAuthNav();
+                    showToast('เข้าสู่ระบบสำเร็จ: ' + currentUser.name);
+                    if (currentUser.role === 'admin') switchTab('admin');
+                    else switchTab('mytickets');
+                } else {
+                    showToast('❌ ' + (data.message || 'อีเมลหรือรหัสผ่านไม่ถูกต้อง'));
+                }
+            } catch (err) {
+                showToast('❌ การเชื่อมต่อล้มเหลว กรุณาตรวจสอบ API');
+            }
+        }
+
+        async function handleRegister(e) {
+            e.preventDefault();
+            const name = document.getElementById('regName').value;
+            const phone = document.getElementById('regPhone').value;
+            const email = document.getElementById('regEmail').value;
+            const password = document.getElementById('regPassword').value;
+
+            try {
+                const res = await fetch(API_BASE + '/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, phone, email, password })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    authToken = data.token;
+                    currentUser = data.user;
+                    localStorage.setItem('phonefix_token', authToken);
+                    renderAuthNav();
+                    showToast('สมัครสมาชิกสำเร็จ ยินดีต้อนรับ!');
+                    switchTab('mytickets');
+                } else {
+                    showToast('❌ ' + (data.message || 'เกิดข้อผิดพลาดในการสมัครสมาชิก'));
+                }
+            } catch (err) {
+                showToast('❌ การเชื่อมต่อล้มเหลว');
+            }
+        }
+
+        async function handleLogout() {
+            if (authToken) {
+                try {
+                    await fetch(API_BASE + '/logout', {
+                        method: 'POST',
+                        headers: { 'Authorization': 'Bearer ' + authToken }
+                    });
+                } catch (e) {}
+            }
+            handleLogoutSilent();
+            showToast('ออกจากระบบเรียบร้อยแล้ว');
+            switchTab('track');
+        }
+
+        function handleLogoutSilent() {
+            authToken = '';
+            currentUser = null;
+            localStorage.removeItem('phonefix_token');
+            renderGuestNav();
+        }
+
+        // Load Repair Types
+        async function loadRepairTypes() {
+            try {
+                const res = await fetch(API_BASE + '/repair-types');
+                const data = await res.json();
+                if (data.success && data.data) {
+                    const sel = document.getElementById('submitRepairTypeId');
+                    sel.innerHTML = '<option value="">-- เลือกประเภทงานซ่อม --</option>';
+                    data.data.forEach(t => {
+                        sel.innerHTML += `<option value="${t.id}">${t.name} (฿${parseFloat(t.base_price).toFixed(2)})</option>`;
+                    });
+                }
+            } catch (e) {}
+        }
+
+        // Search / Track Ticket
+        function setTrack(code) {
+            document.getElementById('trackInput').value = code;
+            searchTicket();
+        }
+
+        async function searchTicket() {
+            const query = document.getElementById('trackInput').value.trim();
+            if (!query) {
+                showToast('กรุณากรอกรหัสติดตามหรือเบอร์โทร');
+                return;
+            }
+
+            try {
+                const res = await fetch(API_BASE + '/tickets/' + encodeURIComponent(query));
+                const data = await res.json();
+
+                const box = document.getElementById('trackResultBox');
+                if (data.success && data.data) {
+                    box.classList.remove('hidden');
+                    const t = data.data;
+
+                    document.getElementById('resTrackingCode').innerText = t.tracking_code;
+                    document.getElementById('resDeviceModel').innerText = t.device_model;
+                    document.getElementById('resRepairType').innerText = t.repair_type ? t.repair_type.name : '-';
+                    document.getElementById('resIssueDesc').innerText = t.issue_description;
+
+                    // Calculate total cost
+                    let totalCost = t.repair_type ? parseFloat(t.repair_type.base_price) : 0;
+                    if (t.status_logs && t.status_logs.length > 0) {
+                        const lastLog = t.status_logs[t.status_logs.length - 1];
+                        if (lastLog.cost !== null) totalCost = parseFloat(lastLog.cost);
+                    }
+                    document.getElementById('resTotalCost').innerText = '฿' + totalCost.toLocaleString('th-TH', { minimumFractionDigits: 2 });
+
+                    // Status Chip
+                    const chipBox = document.getElementById('resStatusChip');
+                    chipBox.innerHTML = renderChip(t.status);
+
+                    // Timeline logs
+                    const timeline = document.getElementById('resTimelineLogs');
+                    timeline.innerHTML = '';
+                    if (t.status_logs && t.status_logs.length > 0) {
+                        t.status_logs.forEach(l => {
+                            const dateStr = l.created_at ? new Date(l.created_at).toLocaleString('th-TH') : '-';
+                            timeline.innerHTML += `
+                                <div class="timeline-item">
+                                    <div class="timeline-dot"></div>
+                                    <div class="timeline-card">
+                                        <div style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 4px;">
+                                            <strong>${renderChip(l.status)}</strong>
+                                            <span style="color: #64748b; font-size: 11px;">🕒 ${dateStr}</span>
+                                        </div>
+                                        <p style="font-size: 12px; color: #334155;">${l.note || '-'}</p>
+                                        ${l.cost !== null ? `<div style="font-size: 11px; color: #15803d; font-weight: bold; margin-top: 4px;">ค่าบริการ: ฿${parseFloat(l.cost).toFixed(2)}</div>` : ''}
+                                    </div>
+                                </div>
+                            `;
+                        });
+                    } else {
+                        timeline.innerHTML = '<p style="font-size: 12px; color: #94a3b8;">ยังไม่มีประวัติสถานะ</p>';
+                    }
+                } else {
+                    box.classList.add('hidden');
+                    showToast('❌ ไม่พบข้อมูลงานซ่อมสำหรับรหัสนี้');
+                }
+            } catch (e) {
+                showToast('❌ ไม่สามารถค้นหาข้อมูลได้');
+            }
+        }
+
+        function renderChip(status) {
+            const map = {
+                'received': '<span class="chip chip-received">📥 รับเครื่องเข้าซ่อม</span>',
+                'repairing': '<span class="chip chip-repairing">🔧 กำลังดำเนินการซ่อม</span>',
+                'completed': '<span class="chip chip-completed">✅ ซ่อมเสร็จสิ้น / พร้อมรับ</span>',
+                'cancelled': '<span class="chip chip-cancelled">❌ ยกเลิกการซ่อม</span>',
+            };
+            return map[status] || `<span class="chip chip-received">${status}</span>`;
+        }
+
+        // Create Ticket
+        async function handleCreateTicket(e) {
+            e.preventDefault();
+            if (!authToken) {
+                showToast('⚠️ กรุณาเข้าสู่ระบบก่อนยื่นคำขอแจ้งซ่อม');
+                switchTab('auth');
+                return;
+            }
+
+            const repair_type_id = document.getElementById('submitRepairTypeId').value;
+            const device_model = document.getElementById('submitDeviceModel').value;
+            const issue_description = document.getElementById('submitIssueDesc').value;
+
+            try {
+                const res = await fetch(API_BASE + '/tickets', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + authToken
+                    },
+                    body: JSON.stringify({ repair_type_id, device_model, issue_description })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showToast('✅ ยื่นแจ้งซ่อมสำเร็จ! รหัสติดตาม: ' + data.data.tracking_code);
+                    document.getElementById('submitRepairForm').reset();
+                    setTrack(data.data.tracking_code);
+                    switchTab('track');
+                } else {
+                    showToast('❌ ' + (data.message || 'บันทึกไม่สำเร็จ'));
+                }
+            } catch (err) {
+                showToast('❌ เชื่อมต่อล้มเหลว');
+            }
+        }
+
+        // My Tickets
+        async function loadMyTickets() {
+            if (!authToken) {
+                document.getElementById('myTicketsList').innerHTML = '<p style="text-align: center; color: #64748b; font-size: 13px;">กรุณาเข้าสู่ระบบเพื่อดูงานซ่อมของคุณ</p>';
+                return;
+            }
+
+            try {
+                const res = await fetch(API_BASE + '/tickets', {
+                    headers: { 'Authorization': 'Bearer ' + authToken }
+                });
+                const data = await res.json();
+                const list = document.getElementById('myTicketsList');
+                if (data.success && data.data && data.data.length > 0) {
+                    list.innerHTML = '';
+                    data.data.forEach(t => {
+                        let cost = t.repair_type ? parseFloat(t.repair_type.base_price) : 0;
+                        if (t.status_logs && t.status_logs.length > 0) {
+                            const last = t.status_logs[t.status_logs.length - 1];
+                            if (last.cost !== null) cost = parseFloat(last.cost);
+                        }
+
+                        list.innerHTML += `
+                            <div style="background: white; border: 1px solid var(--outline); border-radius: 12px; padding: 16px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                                <div>
+                                    <div style="display: flex; align-items: center; gap: 8px;">
+                                        <strong style="font-family: monospace; font-size: 15px; color: var(--primary);">${t.tracking_code}</strong>
+                                        ${renderChip(t.status)}
+                                    </div>
+                                    <div style="font-size: 14px; font-weight: 600; color: #1e293b; margin-top: 4px;">${t.device_model}</div>
+                                    <div style="font-size: 12px; color: #64748b;">${t.repair_type ? t.repair_type.name : '-'}</div>
+                                </div>
+                                <div style="text-align: right;">
+                                    <div style="font-size: 16px; font-weight: 700; color: #15803d;">฿${cost.toFixed(2)}</div>
+                                    <button class="btn btn-outline" style="padding: 4px 10px; font-size: 11px; margin-top: 6px;" onclick="setTrack('${t.tracking_code}'); switchTab('track');">
+                                        ดูไทม์ไลน์ →
+                                    </button>
+                                </div>
+                            </div>
+                        `;
+                    });
+                } else {
+                    list.innerHTML = '<p style="text-align: center; color: #64748b; font-size: 13px;">ยังไม่มีรายการแจ้งซ่อม</p>';
+                }
+            } catch (e) {
+                document.getElementById('myTicketsList').innerHTML = '<p style="text-align: center; color: var(--error); font-size: 13px;">ไม่สามารถโหลดข้อมูลได้</p>';
+            }
+        }
+
+        // Admin Tickets
+        async function loadAdminTickets() {
+            if (!authToken || !currentUser || currentUser.role !== 'admin') return;
+
+            try {
+                const res = await fetch(API_BASE + '/tickets', {
+                    headers: { 'Authorization': 'Bearer ' + authToken }
+                });
+                const data = await res.json();
+                if (data.success && data.data) {
+                    allAdminTickets = data.data;
+                    renderAdminTicketsList(allAdminTickets);
+                }
+            } catch (e) {}
+        }
+
+        function filterAdminTickets(status) {
+            if (!status) renderAdminTicketsList(allAdminTickets);
+            else renderAdminTicketsList(allAdminTickets.filter(t => t.status === status));
+        }
+
+        function renderAdminTicketsList(tickets) {
+            const container = document.getElementById('adminTicketsList');
+            if (!tickets || tickets.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: #64748b; font-size: 13px;">ไม่พบรายการงานซ่อม</p>';
+                return;
+            }
+
+            container.innerHTML = '';
+            tickets.forEach(t => {
+                let cost = t.repair_type ? parseFloat(t.repair_type.base_price) : 0;
+                if (t.status_logs && t.status_logs.length > 0) {
+                    const last = t.status_logs[t.status_logs.length - 1];
+                    if (last.cost !== null) cost = parseFloat(last.cost);
+                }
+
+                container.innerHTML += `
+                    <div style="background: white; border: 1px solid var(--outline); border-radius: 12px; padding: 16px; margin-bottom: 12px;">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+                            <div>
+                                <span style="font-family: monospace; font-weight: bold; color: var(--primary); font-size: 15px;">${t.tracking_code}</span>
+                                <div style="font-size: 12px; color: #64748b;">ลูกค้า: ${t.owner ? t.owner.name : '-'} (${t.owner ? t.owner.phone : '-'})</div>
+                            </div>
+                            <div>${renderChip(t.status)}</div>
+                        </div>
+
+                        <div style="font-size: 13px; margin-bottom: 8px;">
+                            <strong>เครื่อง:</strong> ${t.device_model} | <strong>บริการ:</strong> ${t.repair_type ? t.repair_type.name : '-'}
+                        </div>
+
+                        <div style="font-size: 12px; color: #475569; background: #f8fafc; padding: 8px; border-radius: 6px; margin-bottom: 10px;">
+                            ${t.issue_description}
+                        </div>
+
+                        <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #f1f5f9; pt: 8px;">
+                            <span style="font-size: 14px; font-weight: 700; color: #15803d;">฿${cost.toFixed(2)}</span>
+                            <div style="display: flex; gap: 6px;">
+                                <button class="btn btn-outline" style="padding: 4px 10px; font-size: 11px;" onclick="setTrack('${t.tracking_code}'); switchTab('track');">
+                                    ดูประวัติ
+                                </button>
+                                <button class="btn btn-primary" style="padding: 4px 10px; font-size: 11px;" onclick="openUpdateModal(${t.id}, '${t.status}', ${cost})">
+                                    ⚙️ อัปเดตสถานะ
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        // Modal for Admin Status Update
+        function openUpdateModal(ticketId, currentStatus, currentCost) {
+            document.getElementById('modalTicketId').value = ticketId;
+            document.getElementById('modalStatus').value = currentStatus;
+            document.getElementById('modalCost').value = currentCost || '';
+            document.getElementById('modalNote').value = '';
+            document.getElementById('updateStatusModal').style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('updateStatusModal').style.display = 'none';
+        }
+
+        async function submitStatusUpdate(e) {
+            e.preventDefault();
+            const id = document.getElementById('modalTicketId').value;
+            const status = document.getElementById('modalStatus').value;
+            const cost = document.getElementById('modalCost').value;
+            const note = document.getElementById('modalNote').value;
+
+            try {
+                const res = await fetch(API_BASE + '/tickets/' + id + '/status', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + authToken
+                    },
+                    body: JSON.stringify({ status, cost, note })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showToast('✅ อัปเดตสถานะงานซ่อมสำเร็จ');
+                    closeModal();
+                    loadAdminTickets();
+                } else {
+                    showToast('❌ ' + (data.message || 'เกิดข้อผิดพลาด'));
+                }
+            } catch (err) {
+                showToast('❌ การเชื่อมต่อล้มเหลว');
+            }
+        }
+    </script>
+</body>
+</html>
